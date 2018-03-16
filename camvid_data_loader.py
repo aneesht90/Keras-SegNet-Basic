@@ -18,10 +18,12 @@ def load_data(mode):
     data = []
     label = []
     with open(DataPath + mode +'.txt') as f:
+        print("path found")
         txt = f.readlines()
         txt = [line.split(' ') for line in txt]
     for i in range(len(txt)):
-        data.append(np.rollaxis(normalized(cv2.imread(os.getcwd() + txt[i][0][7:])),2))
+        #data.append(np.rollaxis(normalized(cv2.imread(os.getcwd() + txt[i][0][7:])),2))
+        data.append(np.rollaxis(normalized(cv2.imread(os.getcwd() + txt[i][0][7:])),0))
         label.append(one_hot_it(cv2.imread(os.getcwd() + txt[i][1][7:][:-1])[:,:,0]))
         print('.',end='')
     return np.array(data), np.array(label)
