@@ -26,26 +26,30 @@ def create_encoding_layers():
     pad = 1
     pool_size = 2
     return [
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(filter_size, (kernel, kernel), padding='valid'),
+        #ZeroPadding2D(padding=(pad,pad)),
+        #Conv2D(filter_size, (kernel, kernel), padding='valid'),
+        Conv2D(filter_size, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
         MaxPooling2D(pool_size=(pool_size, pool_size)),
 
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(128, (kernel, kernel), padding='valid'),
+        #ZeroPadding2D(padding=(pad,pad)),
+        #Conv2D(128, (kernel, kernel), padding='valid'),
+        Conv2D(128, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
         MaxPooling2D(pool_size=(pool_size, pool_size)),
 
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(256, (kernel, kernel), padding='valid'),
+        #ZeroPadding2D(padding=(pad,pad)),
+        #Conv2D(256, (kernel, kernel), padding='valid'),
+        Conv2D(256, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
         MaxPooling2D(pool_size=(pool_size, pool_size)),
 
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(512, (kernel, kernel), padding='valid'),
+        #ZeroPadding2D(padding=(pad,pad)),
+        #Conv2D(512, (kernel, kernel), padding='valid'),
+        Conv2D(512, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
     ]
@@ -56,23 +60,27 @@ def create_decoding_layers():
     pad = 1
     pool_size = 2
     return[
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(512, (kernel, kernel), padding='valid'),
+        # ZeroPadding2D(padding=(pad,pad)),
+        # Conv2D(512, (kernel, kernel), padding='valid'),
+        Conv2D(512, (kernel, kernel), padding='same'),
         BatchNormalization(),
 
         UpSampling2D(size=(pool_size,pool_size)),
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(256, (kernel, kernel), padding='valid'),
+        # ZeroPadding2D(padding=(pad,pad)),
+        # Conv2D(256, (kernel, kernel), padding='valid'),
+        Conv2D(256, (kernel, kernel), padding='same'),
         BatchNormalization(),
 
         UpSampling2D(size=(pool_size,pool_size)),
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(128, (kernel, kernel), padding='valid'),
+        # ZeroPadding2D(padding=(pad,pad)),
+        # Conv2D(128, (kernel, kernel), padding='valid'),
+        Conv2D(128, (kernel, kernel), padding='same'),
         BatchNormalization(),
 
         UpSampling2D(size=(pool_size,pool_size)),
-        ZeroPadding2D(padding=(pad,pad)),
-        Conv2D(filter_size, (kernel, kernel), padding='valid'),
+        # ZeroPadding2D(padding=(pad,pad)),
+        # Conv2D(filter_size, (kernel, kernel), padding='valid'),
+        Conv2D(filter_size, (kernel, kernel), padding='same'),
         BatchNormalization(),
     ]
 
@@ -95,6 +103,7 @@ for l in segnet_basic.encoding_layers:
 segnet_basic.decoding_layers = create_decoding_layers()
 for l in segnet_basic.decoding_layers:
     segnet_basic.add(l)
+
 
 segnet_basic.add(Conv2D(12, (1, 1), padding='valid',))
 
