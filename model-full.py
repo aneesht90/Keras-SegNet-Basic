@@ -129,7 +129,7 @@ decoding_layers = [
 
 segnet_basic = models.Sequential()
 
-segnet_basic.add(Layer(input_shape=(3, 360, 480)))
+segnet_basic.add(Layer(input_shape=(360, 480, 3)))
 
 
 segnet_basic.encoding_layers = encoding_layers
@@ -142,7 +142,7 @@ for l in segnet_basic.decoding_layers:
     segnet_basic.add(l)
 
 
-segnet_basic.add(Reshape((n_labels, img_h * img_w), input_shape=(12,img_h, img_w)))
+segnet_basic.add(Reshape((n_labels, img_h * img_w), input_shape=(img_h, img_w, 12)))
 segnet_basic.add(Permute((2, 1)))
 segnet_basic.add(Activation('softmax'))
 
