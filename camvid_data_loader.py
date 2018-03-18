@@ -11,14 +11,17 @@ import os
 # Copy the data to this dir here in the SegNet project /CamVid from here:
 # https://github.com/alexgkendall/SegNet-Tutorial
 DataPath = './CamVid/'
-data_shape = 360*480
+image_height  = 360
+image_width   = 480
+data_shape    = image_height * image_width
+
 
 
 def load_data(mode):
     data = []
     label = []
     with open(DataPath + mode +'.txt') as f:
-        print("path found")
+        #print("path found")
         txt = f.readlines()
         txt = [line.split(' ') for line in txt]
     for i in range(len(txt)):
@@ -31,13 +34,13 @@ def load_data(mode):
 
 
 train_data, train_label = load_data("train")
-train_label = np.reshape(train_label,(367,data_shape,12))
+train_label = np.reshape(train_label,(367,image_height,image_width,12))
 
 test_data, test_label = load_data("test")
-test_label = np.reshape(test_label,(233,data_shape,12))
+test_label = np.reshape(test_label,(233,image_height,image_width,12))
 
 val_data, val_label = load_data("val")
-val_label = np.reshape(val_label,(101,data_shape,12))
+val_label = np.reshape(val_label,(101,image_height,image_width,12))
 
 
 np.save("data/train_data", train_data)

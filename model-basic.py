@@ -16,71 +16,93 @@ import numpy as np
 import json
 np.random.seed(7) # 0bserver07 for reproducibility
 
-data_shape = 360*480
+
+
+segment_count = 12
+channel_count = 3
+image_height  = 360
+image_width   = 480
+
+filter_size_enc_1 = 64
+filter_size_enc_2 = 128
+filter_size_enc_3 = 256
+filter_size_enc_4 = 512
+
+filter_size_dec_1 = 512
+filter_size_dec_2 = 256
+filter_size_dec_3 = 128
+filter_size_dec_4 = 64
+
+
+input_shape   = (image_height, image_width, channel_count)
+output_shape  = (image_height, image_width, segment_count)
+data_shape    = image_height * image_width
+data_shape_   = (image_height, image_width)
+
 
 
 
 def create_encoding_layers():
     kernel = 3
-    filter_size = 64
+    #filter_size = 64
     pad = 1
     pool_size = 2
     return [
         #ZeroPadding2D(padding=(pad,pad)),
         #Conv2D(filter_size, (kernel, kernel), padding='valid'),
-        Conv2D(filter_size, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_enc_1, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
         MaxPooling2D(pool_size=(pool_size, pool_size)),
 
         #ZeroPadding2D(padding=(pad,pad)),
         #Conv2D(128, (kernel, kernel), padding='valid'),
-        Conv2D(128, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_enc_2, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
         MaxPooling2D(pool_size=(pool_size, pool_size)),
 
         #ZeroPadding2D(padding=(pad,pad)),
         #Conv2D(256, (kernel, kernel), padding='valid'),
-        Conv2D(256, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_enc_3, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
         MaxPooling2D(pool_size=(pool_size, pool_size)),
 
         #ZeroPadding2D(padding=(pad,pad)),
         #Conv2D(512, (kernel, kernel), padding='valid'),
-        Conv2D(512, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_enc_4, (kernel, kernel), padding='same'),
         BatchNormalization(),
         Activation('relu'),
     ]
 
 def create_decoding_layers():
     kernel = 3
-    filter_size = 64
+    #filter_size = 64
     pad = 1
     pool_size = 2
     return[
         # ZeroPadding2D(padding=(pad,pad)),
         # Conv2D(512, (kernel, kernel), padding='valid'),
-        Conv2D(512, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_dec_1, (kernel, kernel), padding='same'),
         BatchNormalization(),
 
         UpSampling2D(size=(pool_size,pool_size)),
         # ZeroPadding2D(padding=(pad,pad)),
         # Conv2D(256, (kernel, kernel), padding='valid'),
-        Conv2D(256, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_dec_2, (kernel, kernel), padding='same'),
         BatchNormalization(),
 
         UpSampling2D(size=(pool_size,pool_size)),
         # ZeroPadding2D(padding=(pad,pad)),
         # Conv2D(128, (kernel, kernel), padding='valid'),
-        Conv2D(128, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_dec_3, (kernel, kernel), padding='same'),
         BatchNormalization(),
 
         UpSampling2D(size=(pool_size,pool_size)),
         # ZeroPadding2D(padding=(pad,pad)),
         # Conv2D(filter_size, (kernel, kernel), padding='valid'),
-        Conv2D(filter_size, (kernel, kernel), padding='same'),
+        Conv2D(filter_size_dec_4, (kernel, kernel), padding='same'),
         BatchNormalization(),
     ]
 
@@ -89,7 +111,7 @@ def create_decoding_layers():
 
 segnet_basic = models.Sequential()
 
-segnet_basic.add(Layer(input_shape=(360, 480, 3)))
+segnet_basic.add(Layer(input_shape=input_shape))
 
 
 
@@ -105,10 +127,11 @@ for l in segnet_basic.decoding_layers:
     segnet_basic.add(l)
 
 
-segnet_basic.add(Conv2D(12, (1, 1), padding='valid',))
+segnet_basic.add(Conv2D(segment_count, (1, 1), padding='valid',))
 
-segnet_basic.add(Reshape((12,data_shape), input_shape=(360,480,12)))
-segnet_basic.add(Permute((2, 1)))
+#segnet_basic.add(Reshape((segment_count,data_shape), input_shape=output_shape))
+segnet_basic.add(Reshape((image_height,image_width,segment_count), input_shape=output_shape))
+#segnet_basic.add(Permute((2, 1)))
 segnet_basic.add(Activation('softmax'))
 
 
