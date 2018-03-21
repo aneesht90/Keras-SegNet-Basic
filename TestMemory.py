@@ -35,9 +35,9 @@ def get_model_memory_usage(batch_size, model):
 
 def main():
 
-    with open('segNet_basic_model.json') as model_file:
+    with open('segNet_full_model.json') as model_file:
             segnet_basic = models.model_from_json(model_file.read())
-    print(get_model_memory_usage(1  , segnet_basic))
+    print(get_model_memory_usage(1 , segnet_basic))
 
 if __name__ == "__main__":
     main()

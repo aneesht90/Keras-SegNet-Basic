@@ -26,6 +26,22 @@ class DataGenerator(object):
           for step in range(0,imax-1):
               yield data[step*self.batch_size : (step+1)*self.batch_size], labels[step*self.batch_size : (step+1)*self.batch_size]
 
+ def generate_(self, labels, data):
+     'Generates batches of samples'
+     # Infinite loop
+
+     while 1:
+         # Generate batches
+         imax  = int(len(data)/self.batch_size)
+         #data /=255
+         #print("print data shape",np.array(data).shape)
+         #print("print data type",data.dtype)
+         for step in range(0,imax-1):
+             yield data[step*self.batch_size : (step+1)*self.batch_size], labels[step*self.batch_size : (step+1)*self.batch_size]
+
+
+
+
 #   def __get_exploration_order(self, list_IDs):
 #       'Generates order of exploration'
 #       # Find exploration order
