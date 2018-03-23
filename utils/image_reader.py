@@ -20,12 +20,22 @@ pascal_mean = np.array([102.93, 111.36, 116.52])
 label_margin = 186
 
 
-def load_img_array(fname, grayscale=False, target_size=None, dim_ordering='default'):
+debug = True
+
+
+
+
+
+
+
+
+def load_img_array(fname, grayscale=False, target_size=None, dim_ordering='default', data_format=None):
     """Loads and image file and returns an array."""
     img = load_img(fname,
                    grayscale=grayscale,
                    target_size=target_size)
-    x = img_to_array(img, dim_ordering=dim_ordering)
+    #x = img_to_array(img, dim_ordering=dim_ordering)
+    x = img_to_array(img, data_format=data_format)
     return x
 
 
@@ -82,7 +92,7 @@ class SegmentationDataGenerator:
         # Generators for image data
         img_arrs = (load_img_array(f) for f in img_fnames)
         mask_arrs = (load_img_array(f, grayscale=True) for f in mask_fnames)
-
+        #print ()
         def add_context_margin(image, margin_size, **pad_kwargs):
             """ Adds a margin-size border around the image, used for
             providing context. """
@@ -117,19 +127,21 @@ class SegmentationDataGenerator:
         def pad_image(image):
             image_pad_kwargs = dict(mode='reflect')
             image = add_context_margin(image, label_margin, **image_pad_kwargs)
-            return pad_to_square(image, 500, **image_pad_kwargs)
+            return pad_to_square(image, 256, **image_pad_kwargs)
 
         def pad_label(image):
             # Same steps as the image, but the borders are constant white
             label_pad_kwargs = dict(mode='constant', constant_values=255)
             image = add_context_margin(image, label_margin, **label_pad_kwargs)
-            return pad_to_square(image, 500, **label_pad_kwargs)
+            return pad_to_square(image, 256, **label_pad_kwargs)
 
         pairs = ((pad_image(image), pad_label(label)) for
                  image, label in zip(img_arrs, mask_arrs))
 
+        if debug == True:
+            print("shape of processed pairs",pairs.shape )
         # random/center crop
-        def crop_to(image, target_h=500, target_w=500):
+        def crop_to(image, target_h=256, target_w=256):
             # TODO: random cropping
             h_off = (image.shape[0] - target_h) // 2
             w_off = (image.shape[1] - target_w) // 2
@@ -192,6 +204,11 @@ class SegmentationDataGenerator:
             i = 0
             img_batch = np.zeros((batch_size, img_target_size[0], img_target_size[1], 3))
             mask_batch = np.zeros((batch_size, mask_target_size[0] * mask_target_size[1], 1))
+            #debug information
+            if debug == True:
+                print("image batch size is: ",img_batch.shape)
+                print("mask batch size is: ",mask_batch.shape)
+                #print("shape of processed pairs",pairs.shape )
             for img, mask in pairs:
                 # Fill up the batch one pair at a time
                 img_batch[i] = img

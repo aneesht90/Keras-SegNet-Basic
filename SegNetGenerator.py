@@ -47,11 +47,11 @@ with open('segNet_basic_model.json') as model_file:
 
 
 #segnet_basic.compile(loss="categorical_crossentropy", optimizer='adadelta', metrics=["accuracy"])
-segnet_basic.compile(loss="sparse_categorical_crossentropy", optimizers.SGD(lr=learning_rate, momentum=0.9), metrics=["accuracy"])
+segnet_basic.compile(loss="sparse_categorical_crossentropy", optimizer='adadelta', metrics=["accuracy"])
 
 # checkpoint
-filepath="weights.best.hdf5"
-checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+#filepath="weights.best.hdf5"
+#checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
 callbacks_list = [tensorboard]
 
 
@@ -67,9 +67,57 @@ callbacks_list = [tensorboard]
 # test_data = np.load('./data/test_data.npy')
 # test_label = np.load('./data/test_label.npy')
 
+# Getting list of files
+
+DataPath = './CamVid/'
+# train_list_fname = DataPath + 'train.txt'
+# val_list_fname   = DataPath + 'val.txt'
+# img_root         = DataPath + 'train'
+# mask_root        = DataPath + 'val'
+
+
+# def build_abs_paths(basenames):
+#         )
+#         img_fnames = [os.path.join(os.getcwd() + txt[i][0][7:])  for f in basenames]
+#         mask_fnames = [os.path.join(mask_root, f) + '.png' for f in basenames]
+#         return img_fnames, mask_fnames
+#
+# train_basenames = [l.strip() for l in open(train_list_fname).readlines()]
+# val_basenames = [l.strip() for l in open(val_list_fname).readlines()][:500]
+#
+# train_img_fnames, train_mask_fnames = build_abs_paths(train_basenames)
+# val_img_fnames, val_mask_fnames = build_abs_paths(val_basenames)
+
+
+def load_filenames(mode):
+    data = []
+    label = []
+    with open(DataPath + mode +'.txt') as f:
+        #print("path found")
+        txt = f.readlines()
+        txt = [line.split(' ') for line in txt]
+    #data.append(np.rollaxis(normalized(cv2.imread(os.getcwd() + txt[i][0][7:])),2))
+    #data.append(np.rollaxis(normalized(cv2.imread(os.getcwd() + txt[i][0][7:])),0))
+    count = 0
+    print("Test print",os.getcwd() +txt[count][0][7:])
+    print("Test print sophist",os.getcwd() +txt[count][0][7:])
+    print("Label print",os.getcwd() +txt[count][1][7:][:-1])
+
+    data =  [os.getcwd() +txt[count][0][7:] for i in range(len(txt))]
+    label =  [os.getcwd() +txt[count][1][7:][:-1] for i in range(len(txt))]
+    print('.',end='')
+    return np.array(data), np.array(label)
+
+
+train_img_fnames, train_mask_fnames = load_filenames("train")
+val_img_fnames, val_mask_fnames     = load_filenames("val")
 
 
 
+
+# Printing filename lists
+# print("file names",train_img_fnames)
+# print("length of base names",len(train_img_fnames))
 
 
 # Generators
@@ -80,42 +128,27 @@ datagen_train     = SegmentationDataGenerator(transformer_train)
 transformer_val   = RandomTransformer(horizontal_flip=False, vertical_flip=False)
 datagen_val       = SegmentationDataGenerator(transformer_val)
 
-def build_abs_paths(basenames):
-        img_fnames = [os.path.join(img_root, f) + '.jpg' for f in basenames]
-        mask_fnames = [os.path.join(mask_root, f) + '.png' for f in basenames]
-        return img_fnames, mask_fnames
-
-train_basenames = [l.strip() for l in open(train_list_fname).readlines()]
-val_basenames = [l.strip() for l in open(val_list_fname).readlines()][:500]
-
-train_img_fnames, train_mask_fnames = build_abs_paths(train_basenames)
-val_img_fnames, val_mask_fnames = build_abs_paths(val_basenames)
 
 
+#print()
 segnet_basic.fit_generator(
         datagen_train.flow_from_list(
             train_img_fnames,
             train_mask_fnames,
             shuffle=True,
             batch_size=batch_size,
-            img_target_size=(500, 500),
-            mask_target_size=(16, 16)),
-        samples_per_epoch=len(train_basenames),
+            img_target_size=(256, 256),
+            mask_target_size=(256, 256)),
+        samples_per_epoch=len(train_img_fnames),
         nb_epoch=20,
         validation_data=datagen_val.flow_from_list(
             val_img_fnames,
             val_mask_fnames,
             batch_size=8,
-            img_target_size=(500, 500),
-            mask_target_size=(16, 16)),
-        nb_val_samples=len(val_basenames),
-        callbacks=[
-            model_checkpoint,
-            tensorboard_cback,
-            csv_log_cback,
-            reduce_lr_cback,
-            skipped_report_cback,
-        ])
+            img_target_size=(256, 256),
+            mask_target_size=(256, 256)),
+        nb_val_samples=len(val_img_fnames),
+        callbacks=callbacks_list)
 
 
 
@@ -145,4 +178,4 @@ segnet_basic.fit_generator(
 #                     verbose=1, class_weight=class_weighting , validation_data=(test_data, test_label), shuffle=True) # validation_split=0.33
 
 # This save the trained model weights to this file with number of epochs
-segnet_basic.save_weights('weights/model_weight_{}.hdf5'.format(nb_epoch))
+# segnet_basic.save_weights('weights/model_weight_{}.hdf5'.format(nb_epoch))
