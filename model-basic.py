@@ -20,8 +20,9 @@ np.random.seed(7) # 0bserver07 for reproducibility
 
 segment_count = 12
 channel_count = 3
-image_height  = 360
-image_width   = 480
+image_height  = 360   # {192,360}
+image_width   = 480   # {256,480}
+
 
 filter_size_enc_1 = 64
 filter_size_enc_2 = 128
@@ -131,6 +132,7 @@ segnet_basic.add(Conv2D(segment_count, (1, 1), padding='valid',))
 
 #segnet_basic.add(Reshape((segment_count,data_shape), input_shape=output_shape))
 segnet_basic.add(Reshape((image_height,image_width,segment_count), input_shape=output_shape))
+#segnet_basic.add(Reshape(output_shape, input_shape=output_shape))
 #segnet_basic.add(Permute((2, 1)))
 segnet_basic.add(Activation('softmax'))
 
