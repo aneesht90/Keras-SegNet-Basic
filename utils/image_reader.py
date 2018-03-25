@@ -1,7 +1,9 @@
+
 import os
 import random
 from collections import namedtuple
-
+import matplotlib.pyplot as plt
+from scipy import misc
 import click
 import numpy as np
 from IPython import embed
@@ -36,6 +38,7 @@ def load_img_array(fname, grayscale=False, target_size=None, dim_ordering='defau
                    target_size=target_size)
     #x = img_to_array(img, dim_ordering=dim_ordering)
     x = img_to_array(img, data_format=data_format)
+    #print("shape of image",x.shape)
     return x
 
 
@@ -92,7 +95,12 @@ class SegmentationDataGenerator:
         # Generators for image data
         img_arrs = (load_img_array(f) for f in img_fnames)
         mask_arrs = (load_img_array(f, grayscale=True) for f in mask_fnames)
-        #print ()
+
+        # if debug == True:
+        #     for count,(image, label) in enumerate(zip(img_arrs, mask_arrs)):
+        #         print("count is: ",count)
+        #         print("shape of image",image.shape)
+        #         print("shape of label",label.shape)
         def add_context_margin(image, margin_size, **pad_kwargs):
             """ Adds a margin-size border around the image, used for
             providing context. """
@@ -137,9 +145,13 @@ class SegmentationDataGenerator:
 
         pairs = ((pad_image(image), pad_label(label)) for
                  image, label in zip(img_arrs, mask_arrs))
+        #
+        # if debug == True:
+        #     for count,(image, label) in enumerate(pairs):
+        #         print("count is: ",count)
+        #         print("shape of image",image.shape)
+        #         print("shape of label",label.shape)
 
-        if debug == True:
-            print("shape of processed pairs",pairs.shape )
         # random/center crop
         def crop_to(image, target_h=256, target_w=256):
             # TODO: random cropping
@@ -149,14 +161,27 @@ class SegmentationDataGenerator:
                    w_off:w_off + target_w, :]
 
         pairs = ((crop_to(image), crop_to(label)) for
-                 image, label in pairs)
+                 image, label in zip(img_arrs, mask_arrs))
+
+        # if debug == True:
+        #     for count,(image, label) in enumerate(pairs):
+        #         print("count is: ",count)
+        #         print("shape of image",image.shape)
+        #         print("shape of label",label.shape)
+
 
         # random augmentation
         augmentation_params = self.random_transformer.random_params_gen()
         transf_fn = self.random_transformer.transform
-        pairs = ((transf_fn(image, params), transf_fn(label, params)) for
-                 ((image, label), params) in zip(pairs, augmentation_params))
+        # pairs = ((transf_fn(image, params), transf_fn(label, params)) for
+        #          ((image, label), params) in zip(pairs, augmentation_params))
 
+        # if debug == True:
+        #     for count,(image, label) in enumerate(pairs):
+        #         print("After augmentation")
+        #         print("count is: ",count)
+        #         print("shape of image",image.shape)
+        #         print("shape of label",label.shape)
         def rgb_to_bgr(image):
             # Swap color channels to use pretrained VGG weights
             return image[:, :, ::-1]
@@ -170,15 +195,26 @@ class SegmentationDataGenerator:
 
         pairs = ((remove_mean(image), label) for
                  image, label in pairs)
-
+        # for count,(image, label) in enumerate(pairs):
+        #     print("count is: ",count)
+        #     print("shape of image",image.shape)
+        #     print("shape of label",label.shape)
         def slice_label(image, offset, label_size, stride):
             # Builds label_size * label_size pixels labels, starting from
             # offset from the original image, and stride stride
+            # if debug==True:
+            #     print("Shape of resized image",image.shape)
             return image[offset:offset + label_size * stride:stride,
                    offset:offset + label_size * stride:stride]
 
-        pairs = ((image, slice_label(label, label_margin, 16, 8)) for
-                 image, label in pairs)
+        # pairs = ((image, slice_label(label, label_margin, 256, 1)) for
+        #          image, label in pairs)
+
+        # if debug == True:
+        #     for count,(image, label) in enumerate(pairs):
+        #         print("count is: ",count)
+        #         print("shape of image",image.shape)
+        #         print("shape of label",label.shape)
 
         return pairs
 
@@ -205,15 +241,18 @@ class SegmentationDataGenerator:
             img_batch = np.zeros((batch_size, img_target_size[0], img_target_size[1], 3))
             mask_batch = np.zeros((batch_size, mask_target_size[0] * mask_target_size[1], 1))
             #debug information
-            if debug == True:
-                print("image batch size is: ",img_batch.shape)
-                print("mask batch size is: ",mask_batch.shape)
+            # if debug == True:
+            #     print("image batch size is: ",img_batch.shape)
+            #     print("mask batch size is: ",mask_batch.shape)
                 #print("shape of processed pairs",pairs.shape )
             for img, mask in pairs:
                 # Fill up the batch one pair at a time
                 img_batch[i] = img
                 # Pass the label image as 1D array to avoid the problematic Reshape
                 # layer after Softmax (see model.py)
+                if debug==True:
+                    print("Size of mask is: ",mask.shape)
+                    #print(np.array(mask))
                 mask_batch[i] = np.reshape(mask, (-1, 1))
 
                 # TODO: remove this ugly workaround to skip pairs whose mask
@@ -225,6 +264,8 @@ class SegmentationDataGenerator:
                 i += 1
                 if i == batch_size:
                     i = 0
+                    if debug==True:
+                        print("Size of batch is: ",mask_batch.shape)
                     yield img_batch, mask_batch
 
 
